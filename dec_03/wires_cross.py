@@ -1,9 +1,10 @@
 import os
 import numpy as np
+from matplotlib import pyplot
 
 path = os.path.dirname(os.path.abspath(__file__))
 # print(path)
-f = open(os.path.join(path,'wires_paths.txt'), 'r')
+f = open(os.path.join(path,'wires_paths1.txt'), 'r')
 wire_paths = f.read()
 
 [red_wire_path, blue_wire_path] = wire_paths.split('\n')
@@ -23,43 +24,52 @@ dirs_blue, dist_blue = get_wire_moves_list(blue_wire_path)
 # print('Red wire:\n')
 # print(dirs_red)
 # print(dist_red)
-print(max(dist_red))
+# print(max(dist_red))
 # print('Blue wire:\n')
 # print(dirs_blue)
 # print(dist_blue)
-print(max(dist_blue))
+# print(max(dist_blue))
 
 def get_max_dimensions(dirs, dist):
     max_x=0
     max_y=0
+    x=0
+    y=0
     index=0
     for d in dirs:
         if d in ['L', 'R']:
             if d=='L':
-                max_x-=dist[index]
+                x-=dist[index]
             else:
-                max_x+=dist[index]
+                x+=dist[index]
+            if abs(x)>max_x:
+                max_x=abs(x)
+            # print('Max_x ',str(max_x))
         if d in ['U','D']:
             if d=='U':
-                max_y+=dist[index]
+                y+=dist[index]
             else:
-                max_y-=dist[index]
+                y-=dist[index]
+            if abs(y)>max_y:
+                max_y=abs(y)
+            # print('Max_y ',str(max_y))
         index+=1
     return max_x, max_y
         
 max_x_red, max_y_red = get_max_dimensions(dirs_red, dist_red)
 max_x_blue, max_y_blue = get_max_dimensions(dirs_blue, dist_blue)
 
-print(max_x_red, max_x_blue)
-print(max_y_red, max_y_blue)
+# print(max_x_red, max_x_blue)
+# print(max_y_red, max_y_blue)
+
+max_x = max(max_x_red, max_x_blue)
+max_y = max(max_y_red, max_y_blue)
         
+print(max_x, max_y)
         
+wires_map = np.zeros((max_x, max_y), dtype=int)
 
-
-
-wires_map = np.zeros((abs(max(max_x_red,max_x_blue))+1,abs(max(max_y_red,max_y_blue))+1), dtype=int)
-
-def trace_wire_path(map, dirs, dist, x_origin=1000, y_origin=1000):
+def trace_wire_path(map, dirs, dist, x_origin=0, y_origin=0):
     index = 0
     x=x_origin
     y=y_origin
@@ -69,23 +79,29 @@ def trace_wire_path(map, dirs, dist, x_origin=1000, y_origin=1000):
         print('Dir ', dir)
         index+=1
         if dir=='R':
-            print('x',str(x))
-            print('dist',str(d))
+            # print('x0',str(x))
+            # print('dist',str(d))
             process_row_move(map,x,x+d,y)
             x=x+d
-            print(x)
+            # print('x1',str(x))
         elif dir=='L':
+            # print('x0',str(x))
+            # print('dist',str(d))
             process_row_move(map,x-d,x,y)
             x=x-d
-            print(x)
+            # print('x1',str(x))
         elif dir=='U':
+            print('y0',str(y))
+            print('dist',str(d))
             process_column_move(map, x, y, y+d)
             y=y+d
-            print(y)
+            print('y1',str(y))
         else:
+            print('y0',str(y))
+            print('dist',str(d))
             process_column_move(map, x, y-d, y)
             y=y-d
-            print(y)
+            print('y1',str(y))
 
 def process_row_move(map, x1, x2, y):
     for x in range(x1, x2):
@@ -108,4 +124,24 @@ def process_column_move(map, x, y1, y2):
 
 trace_wire_path(wires_map, dirs_red, dist_red)   
 trace_wire_path(wires_map, dirs_blue, dist_blue)   
-print(np.nonzero(wires_map))
+# print(np.nonzero(wires_map))
+(int_rows, int_cols)=np.where(wires_map==2)
+
+# fig = pyplot.figure(figsize=(6, 3.2))
+# ax = fig.add_subplot(111)
+# ax.set_title('WiresMap')
+pyplot.imshow(wires_map)
+# ax.set_aspect('equal')
+pyplot.show()
+# pyplot.matshow(wires_map)
+
+# def calc_closest_intersect(rows, cols):
+#     dist_to_origin = 10e7
+#     for i in range(len(rows)):
+#         d = abs(rows[i]-1001)+abs(cols[i]-1001)
+#         if d<dist_to_origin:
+#             dist_to_origin=d
+#     return dist_to_origin
+
+# d = calc_closest_intersect(int_rows, int_cols)
+# print(d)    
